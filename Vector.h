@@ -26,7 +26,9 @@ public:
 
 
 	//functions
-	inline T at(size_t n) const { if (n <= size_) return elem_[n]; }
+	T at(size_t n) const { if (n < size_) return elem_[n]; else throw std::out_of_range{ "Vector::at() index value out of range." }; }
+	T front() const { if (size_ > 0) return elem_[0]; else throw std::logic_error{ "Vector::front() empty vector" }; }
+	T back() const { if (size_ > 0) return elem_[size_ - 1]; else throw std::logic_error{ "Vector::back() empty vector" }; }
 	void reserve(const size_t capacity);
 	void push_back(const T value);
 	bool empty() const;
