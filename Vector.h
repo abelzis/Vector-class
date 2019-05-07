@@ -11,6 +11,7 @@ private:
 
 	void copyValues_(T* src_begin, T* src_end, T* dstn);
 	void fill_n_(T* begin, size_t qty, T value);
+	inline typename std::remove_reference<T>::type&& move_(T& obj);
 	inline typename std::remove_reference<T>::type&& move_(T&& obj);
 
 public:
@@ -26,6 +27,12 @@ public:
 		iterator(T& value) : ptr_(&value) { }
 		iterator(const iterator& it) : ptr_(it.ptr_) { }	//copy constructor
 		iterator(T&& value) : ptr_(&value) { }				//move constructor
+
+		//get'er
+		inline T& value() const { return *ptr_; }
+
+		//set'er
+		inline void setValue(const T& value) { *ptr_ = value; }
 
 		iterator& operator=(T* ptr) { ptr_ = ptr; return *this; }					//assigning another iterator
 		iterator& operator=(const iterator& it) { ptr_ = it.ptr_; return *this; }	//assigning another iterator
@@ -47,10 +54,14 @@ public:
 			return *this;
 		}
 		inline friend std::ostream& operator<<(std::ostream& out, const iterator& it) { return (out << *(it.ptr_)); }	//stream operator
-		inline iterator& operator++(int a) { ptr_++; return *this; }													//increment operator
-		inline iterator& operator--(int a) { ptr_--; return *this; }													//decrement operator
+		inline iterator& operator++() { ptr_++; return *this; }													//pre-increment operator
+		inline iterator& operator--() { ptr_--; return *this; }													//pre-decrement operator
+		inline iterator operator++(int a) { ptr_++; return *this; }													//post-increment operator
+		inline iterator operator--(int a) { ptr_--; return *this; }													//post-decrement operator
 		inline friend bool operator==(const iterator& a, const iterator& b) { return a.ptr_ == b.ptr_; }				//equal operator
+		inline friend bool operator==(const iterator& a, const T& b) { return *a.ptr_ == b; }							//equal operator
 		inline friend bool operator!=(const iterator& a, const iterator& b) { return !(a == b); }						//not equal operator
+		inline friend bool operator!=(const iterator& a, const T& b) { return !(a == b); }
 		
 	};
 
@@ -61,20 +72,32 @@ public:
 	Vector(size_t size, T value) : size_(size), capacity_(size), elem_(new T[size]) { fill_n_(begin(), size, value); }
 	Vector(const Vector& obj);								//copy constructor
 	
-	//get'er functions
-	inline size_t size() const { return size_; }
-	inline size_t capacity() const { return capacity_; }
+	//get'er and set'er functions
+	inline size_t size() const { return size_; }			//returns size
+	inline size_t capacity() const { return capacity_; }	//returns capacity
 
+	inline T at(const size_t n) const { if (n < size_) return elem_[n]; throw std::out_of_range{ "Vector::at() index value out of range." }; }					//returns value at index
+	inline void at(const size_t n, const T& value) { if (n < size_) elem_[n] = value; throw std::out_of_range{ "Vector::at() index value out of range." }; }	//set value at index
+
+	inline T front() const { if (size_ > 0) return elem_[0]; throw std::logic_error{ "Vector::front() empty vector" }; }					//return first value
+	inline void front(const T& value) { if (size_ > 0) elem_[0] = value; throw std::logic_error{ "Vector::front() empty vector" }; }		//set first value
+
+	inline T back() const { if (size_ > 0) return elem_[size_ - 1]; throw std::logic_error{ "Vector::back() empty vector" }; }				//return last value  
+	inline void back(const T& value) { if (size_ > 0) elem_[size_ - 1] = value; throw std::logic_error{ "Vector::back() empty vector" }; }	//set last value
 
 	//functions
-	T at(size_t n) const { if (n < size_) return elem_[n]; throw std::out_of_range{ "Vector::at() index value out of range." }; }	//returns value at index
-	T front() const { if (size_ > 0) return elem_[0]; throw std::logic_error{ "Vector::front() empty vector" }; }					//return first value
-	T back() const { if (size_ > 0) return elem_[size_ - 1]; throw std::logic_error{ "Vector::back() empty vector" }; }			//return last value  
 	void reserve(const size_t capacity);	//reserves size
 	void push_back(const T value);			//push back element at tail
-	void swap(T& a, T& b);
-	void insert(T* pos, const T value);		//single value insertion
+
+		//swaps
+	void swap(size_t pos_a, size_t pos_b);								//swaps two values at positions
+	void swap(T* pos_a, T* pos_b);										//swaps two values
+	void swap(Vector<T>& obj);											//swaps vectors
+	void swap(Vector<T>::iterator pos_a, Vector<T>::iterator pos_b);	//swaps two values using iterators
+
+	void insert(size_t pos, const T value);	//single value insertion
 	bool empty() const;						//check if array is empty
+	inline void clear() { Vector<T>().swap(*this); }								//clears vector
 	inline T* begin() const { if (size_ > 0) return &elem_[0]; return nullptr; }	//begin iterator
 	inline T* end() const { if (size_ > 0) return &elem_[size_]; return nullptr; }	//end iterator
 
@@ -84,8 +107,11 @@ public:
 
 	friend std::ostream& operator<<(std::ostream& out, const Vector& obj)	//stream operator
 	{
-		for (Vector::iterator it = obj.begin(); it != obj.end(); it++) 
-			out << it << " "; 
+		if (!obj.empty())
+			for (Vector::iterator it = obj.begin(); it != obj.end(); it++)
+				out << it << " ";
+		else
+			out << "Vector object is empty.";
 		return out;
 	}
 
@@ -117,16 +143,16 @@ void Vector<T>::fill_n_(T* begin, size_t qty, T value)
 }
 
 template<class T>
-inline typename std::remove_reference<T>::type&& Vector<T>::move_(T&& obj)
+inline typename std::remove_reference<T>::type&& Vector<T>::move_(T& obj)
 {
-	return static_cast<typename std::remove_reference<T>::type&&> (obj);
+	return (static_cast<typename std::remove_reference<T>::type&&> (obj));
 }
 
-//template<class T>
-//inline typename std::remove_reference<T>::type&& Vector<T>::move_(T&& obj)
-//{
-//	static_cast<typename std::remove_reference<T>::type&&>(obj);
-//}
+template<class T>
+inline typename std::remove_reference<T>::type&& Vector<T>::move_(T&& obj)
+{
+	return (static_cast<typename std::remove_reference<T>::type&&> (obj));
+}
 
 
 //CONSTRUCTORS
@@ -163,19 +189,70 @@ void Vector<T>::push_back(const T value)
 }
 
 template<class T>
-void Vector<T>::swap(T& a, T& b)
+void Vector<T>::swap(size_t pos_a, size_t pos_b)
 {
-	T temp = move_(a);
-	a = move_(b);
-	b = move_(a);
+	//swap using move semantic (l-values
+	T temp = move_(elem_[pos_a]);
+	elem_[pos_a] = move_(elem_[pos_b]);
+	elem_[pos_b] = move_(temp);
 }
 
 template<class T>
-void Vector<T>::insert(T* pos, const T value)
+void Vector<T>::swap(T* pos_a, T* pos_b)
+{
+	//swap using move semantic (l-values)
+	T temp = move_(*pos_a);
+	*pos_a = move_(*pos_b);
+	*pos_b = move_(temp);
+}
+
+template<class T>
+void Vector<T>::swap(Vector<T>::iterator pos_a, Vector<T>::iterator pos_b)
+{
+	T value = pos_a.value();
+	pos_a.setValue(pos_b.value());
+	pos_b.setValue(value);
+}
+
+template<class T>
+void Vector<T>::swap(Vector<T>& obj)
+{
+	//create temporary "object" to point to 'this'
+	T* temp_elem_ = this->elem_;
+	size_t temp_size_ = this->size_;
+	size_t temp_capacity_ = this->capacity_;
+
+	//point 'this' to 'obj'
+	this->elem_ = obj.elem_;
+	this->size_ = obj.size_;
+	this->capacity_ = obj.capacity_;
+
+	//point 'obj' to "object"
+	obj.elem_ = temp_elem_;
+	obj.size_ = temp_size_;
+	obj.capacity_ = temp_capacity_;
+	
+	//delete pointer
+	delete temp_elem_;
+}
+
+template<class T>
+void Vector<T>::insert(size_t pos, const T value)
 {
 	this->push_back(value);
+	//TODO: WRITE INSERTION FUNCTION AND DELETION FUNCTION
 
+	Vector<T>::iterator it1 = (this->end());
+	it1--;
 
+	Vector<T>::iterator it2 = it1;
+	it2--;
+	while (it1 != &elem_[pos])
+	{
+		this->swap(it1, it2);
+		it1--;
+		it2--;
+	}
 }
 
 template<class T>
@@ -212,7 +289,7 @@ Vector<T>& Vector<T>::operator=(const Vector<T>& obj)
 	return *this;
 }
 
-
+//DESTRUCTOR
 template<class T>
 Vector<T>::~Vector()
 {
