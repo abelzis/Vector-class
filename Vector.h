@@ -1,6 +1,7 @@
 #pragma once
 
 #include <exception>
+#include <ostream>
 
 template <class T>
 class Vector
@@ -117,6 +118,15 @@ public:
 	//operators
 	T& operator[](size_t index) const;
 	Vector<T>& operator=(const Vector<T>& obj);
+	bool friend operator==(const Vector<T>& a, const Vector<T>& b)
+	{
+		if (a.size_ != b.size_)
+			return false;
+		for (size_t i = 0; i < a.size_; i++)
+			if (a.elem_[i] != b.elem_[i])
+				return false;
+		return true;
+	}
 
 	friend std::ostream& operator<<(std::ostream& out, const Vector& obj)	//stream operator
 	{
