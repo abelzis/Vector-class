@@ -17,7 +17,9 @@ int main()
 {
   // creates an array with size and capacity of 5 elements with values set to 0.
   Vector<int> a { 5 }; // { 0, 0, 0, 0, 0 }
+  // add value 3 to the end of the array
   a.push_back(3);      // { 0, 0, 0, 0, 0, 3 }
+  // change 3rd value to 7
   a[2] = 7;            // { 0, 0, 7, 0, 0, 3 }
 }
 ```
