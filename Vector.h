@@ -9,8 +9,10 @@ private:
 	size_t size_, capacity_;
 	T *elem_;
 
+	//private functions
 	void copyValues_(T* src_begin, T* src_end, T* dstn);
 	void fill_n_(T* begin, size_t qty, T value);
+	void reserve_(const size_t capacity);
 	inline typename std::remove_reference<T>::type&& move_(T& obj);
 	inline typename std::remove_reference<T>::type&& move_(T&& obj);
 
@@ -30,9 +32,11 @@ public:
 
 		//get'er
 		inline T& value() const { return *ptr_; }
+		inline T* pointer() const { return ptr_; }
 
 		//set'er
-		inline void setValue(const T& value) { *ptr_ = value; }
+		inline void setValue(const T& value) { if (ptr_ != nullptr) *ptr_ = value; }
+		inline void setPointer(const T*& pointer) { ptr_ = pointer; }
 
 		iterator& operator=(T* ptr) { ptr_ = ptr; return *this; }					//assigning another iterator
 		iterator& operator=(const iterator& it) { ptr_ = it.ptr_; return *this; }	//assigning another iterator
@@ -54,16 +58,17 @@ public:
 			return *this;
 		}
 		inline friend std::ostream& operator<<(std::ostream& out, const iterator& it) { return (out << *(it.ptr_)); }	//stream operator
-		inline iterator& operator++() { ptr_++; return *this; }													//pre-increment operator
-		inline iterator& operator--() { ptr_--; return *this; }													//pre-decrement operator
-		inline iterator operator++(int a) { ptr_++; return *this; }													//post-increment operator
-		inline iterator operator--(int a) { ptr_--; return *this; }													//post-decrement operator
-		inline friend bool operator==(const iterator& a, const iterator& b) { return a.ptr_ == b.ptr_; }				//equal operator
-		inline friend bool operator==(const iterator& a, const T& b) { return *a.ptr_ == b; }							//equal operator
-		inline friend bool operator!=(const iterator& a, const iterator& b) { return !(a == b); }						//not equal operator
-		inline friend bool operator!=(const iterator& a, const T& b) { return !(a == b); }
+		inline iterator& operator++() { ptr_++; return *this; }															//pre-increment operator
+		inline iterator& operator--() { ptr_--; return *this; }															//pre-decrement operator
+		inline iterator operator++(int a) { ptr_++; return *this; }														//post-increment operator
+		inline iterator operator--(int a) { ptr_--; return *this; }														//post-decrement operator
+		inline friend bool operator==(const iterator& a, const iterator& b) { return a.ptr_ == b.ptr_; }				//equal operator comparing to iterator
+		inline friend bool operator==(const iterator& a, const T& b) { return *a.ptr_ == b; }							//equal operator comparing to value
+		inline friend bool operator!=(const iterator& a, const iterator& b) { return !(a == b); }						//not equal operator comparing to iterator
+		inline friend bool operator!=(const iterator& a, const T& b) { return !(a == b); }								//not equal operator comparing to value
 		
-	};
+		//~iterator() { delete ptr_; }	//destructor
+	};	//END OF ITERATOR CLASS
 
 
 	//constructors	
@@ -71,6 +76,7 @@ public:
 	Vector(size_t size) : size_(size), capacity_(size), elem_(new T[size]) { fill_n_(begin(), size, 0); }
 	Vector(size_t size, T value) : size_(size), capacity_(size), elem_(new T[size]) { fill_n_(begin(), size, value); }
 	Vector(const Vector& obj);								//copy constructor
+	Vector(Vector<T>::iterator pos_start, T* pos_end);
 	
 	//get'er and set'er functions
 	inline size_t size() const { return size_; }			//returns size
@@ -88,6 +94,7 @@ public:
 	//functions
 	void reserve(const size_t capacity);	//reserves size
 	void push_back(const T value);			//push back element at tail
+	void pop_back();						//delete last element
 
 		//swaps
 	void swap(size_t pos_a, size_t pos_b);								//swaps two values at positions
@@ -95,9 +102,15 @@ public:
 	void swap(Vector<T>& obj);											//swaps vectors
 	void swap(Vector<T>::iterator pos_a, Vector<T>::iterator pos_b);	//swaps two values using iterators
 
-	void insert(size_t pos, const T value);	//single value insertion
+	void insert(size_t pos, const T value);								//single value insertion
+
+	void erase(size_t pos);													//single value erasion
+	void erase(Vector<T>::iterator pos_start, T* pos_end);					//range erasion
+	void erase(Vector<T>::iterator pos_start, Vector<T>::iterator pos_end);	//range erasion
+
 	bool empty() const;						//check if array is empty
 	inline void clear() { Vector<T>().swap(*this); }								//clears vector
+	void shrink_to_fit() { 	if (size_ < capacity_) reserve_(size_); }
 	inline T* begin() const { if (size_ > 0) return &elem_[0]; return nullptr; }	//begin iterator
 	inline T* end() const { if (size_ > 0) return &elem_[size_]; return nullptr; }	//end iterator
 
@@ -143,6 +156,18 @@ void Vector<T>::fill_n_(T* begin, size_t qty, T value)
 }
 
 template<class T>
+void Vector<T>::reserve_(const size_t capacity)
+{
+	T *new_elem = new T[capacity];
+
+	if (!this->empty())
+		this->copyValues_(begin(), end(), new_elem);	//copy elements to new array
+
+	capacity_ = capacity;	//set capacity to new capacity
+	elem_ = new_elem;		//point old array pointer to new array address
+}
+
+template<class T>
 inline typename std::remove_reference<T>::type&& Vector<T>::move_(T& obj)
 {
 	return (static_cast<typename std::remove_reference<T>::type&&> (obj));
@@ -162,6 +187,24 @@ Vector<T>::Vector(const Vector& obj) : size_(obj.size_), capacity_(obj.capacity_
 	this->copyValues_(obj.begin(), obj.end(), elem_);	//copy values
 }
 
+template<class T>
+Vector<T>::Vector(Vector<T>::iterator pos_start, T* pos_end)
+{
+	T* ptr_temp = pos_start.pointer();	//temp pointer to start
+	int size_temp_ = 0;
+	while (pos_start != pos_end)		//calculate size
+	{
+		size_temp_++;
+		pos_start++;
+	}
+
+	//set values
+	size_ = size_temp_;
+	capacity_ = size_;
+	elem_ = new T[size_];
+	this->copyValues_(ptr_temp, pos_end, elem_);
+}
+
 
 //PUBLIC FUNCTIONS
 template<class T>
@@ -169,13 +212,7 @@ void Vector<T>::reserve(const size_t capacity)
 {
 	if (capacity > capacity_)	//check if reserve size is greater than size already built
 	{
-		T *new_elem = new T[capacity];
-
-		if (!this->empty())
-			this->copyValues_(begin(), end(), new_elem);	//copy elements to new array
-
-		capacity_ = capacity;	//set capacity to new capacity
-		elem_ = new_elem;		//point old array pointer to new array address
+		reserve_(capacity);
 	}
 }
 
@@ -186,6 +223,13 @@ void Vector<T>::push_back(const T value)
 		this->reserve((size_t)(1.5*capacity_));
 	elem_[size_] = value;
 	size_++;
+}
+
+template<class T>
+void Vector<T>::pop_back()
+{
+	elem_[size_] = 0;
+	size_--;
 }
 
 template<class T>
@@ -233,7 +277,7 @@ void Vector<T>::swap(Vector<T>& obj)
 	obj.capacity_ = temp_capacity_;
 	
 	//delete pointer
-	delete temp_elem_;
+	temp_elem_ = nullptr;
 }
 
 template<class T>
@@ -252,6 +296,72 @@ void Vector<T>::insert(size_t pos, const T value)
 		this->swap(it1, it2);
 		it1--;
 		it2--;
+	}
+}
+
+template<class T>
+void Vector<T>::erase(size_t pos)
+{
+	Vector<T>::iterator it1 = &elem_[pos], it2 = &elem_[pos + 1];
+
+	while (it2 != end())
+	{
+		this->swap(it1, it2);
+		it1++;
+		it2++;
+	}
+
+	this->pop_back();
+}
+
+template<class T>
+void Vector<T>::erase(Vector<T>::iterator pos_start, T* pos_end)
+{
+	Vector<T>::iterator end_end = this->end();
+	if (pos_end == this->end())
+		while (pos_start != pos_end)
+		{
+			pos_start++;
+			size_--;
+		}
+
+	else
+	{
+		Vector<T>::iterator it = pos_end;
+		while (it != this->end())
+		{
+			this->swap(pos_start, it);
+			pos_start++;
+			it++;
+			size_--;
+		}
+	}
+}
+
+template<class T>
+void Vector<T>::erase(Vector<T>::iterator pos_start, Vector<T>::iterator pos_end)
+{
+	Vector<T>::iterator end_it = pos_end;
+	if (pos_end == this->end())
+		while (pos_start != pos_end)
+		{
+			pos_start++;
+			size_--;
+		}
+
+	else
+	{
+		while (pos_start != this->end())
+		{
+			if (pos_start != end_it)
+				size_--;
+			if (pos_start == end_it)
+				end_it++;
+			this->swap(pos_start, pos_end);
+			pos_start++;
+			pos_end++;
+		} 
+		//size_++;
 	}
 }
 
@@ -293,5 +403,5 @@ Vector<T>& Vector<T>::operator=(const Vector<T>& obj)
 template<class T>
 Vector<T>::~Vector()
 {
-	delete elem_;
+	elem_ = nullptr;
 }
