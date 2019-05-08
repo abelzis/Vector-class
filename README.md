@@ -1,6 +1,8 @@
 # Vector-class
 Self made Vector class. It is a container, similar, but more primitive, to `std::vector`. This class stores an array of variables in one single line in memory, without any spaces inbetween values.
 
+
+
 # How to use it
 Download the header, place it in your C++ program folder, include it with `#include "Vector.h"`. Syntax is simple: 
 
