@@ -56,6 +56,7 @@ int main()
 
 So is my class even comparable to `std::vector`? Let's find out!
 
+### Test 1
 A simple test is being made: `push_back()` same amount of same values. Compare speed and size in memory. **Note**: `Release mode`, `/O2` optimization flag
 
 Code used:
@@ -144,6 +145,81 @@ int main()
 ![comparison](https://i.gyazo.com/ac5005f81096a30c2d86aae9bf516c14.png)
 
 **Outcome**: speed and memory use is pretty much identical.
+
+### Test 2
+Another key thing about vectors is their reallocation management. Let's test to see how many reallocations happen in 10,000,000 push_back calls.
+
+Code:
+```cpp
+#include <iostream>
+#include <vector>
+#include "Vector.h"
+
+int main()
+{
+	//alter between `std::vector` and `Vector`
+	std::vector<int> big;
+	//Vector<int> big;
+	int prev_capacity = 0, count = 0;
+
+	int* test1 = nullptr, *test2 = nullptr, *test3 = nullptr;	//check for memory addresses to know if reallocation happened
+
+	for (unsigned i = 0; i < 10000000; i++)
+	//while (1)
+	{
+		big.push_back(i);
+
+		if (big.capacity() > prev_capacity)	//check capacity changes
+		{
+			//test 1
+			if (big.size() > 8)	//out_of_range safety	
+			{
+				if (test1 != nullptr)
+				{
+					if (test1 != &big[6])
+					{
+						std::cout << "REALOCATED TEST1!";
+						std::cout << " | CAPACITY: " << big.capacity() << "\n";
+					}
+				}
+				test1 = &big[6];
+			}
+			
+			//test 2
+			if (big.size() > 1566)
+			{
+				if (test2 != nullptr)
+				{
+					if (test2 != &big[1566])
+					{
+						std::cout << "REALOCATED TEST2!";
+						std::cout << " | CAPACITY: " << big.capacity() << "\n";
+					}
+				}
+				test2 = &big[1545];
+			}
+			
+			//test 3
+			if (big.size() > 114445)
+			{
+				if (test2 != nullptr)
+				{
+					if (test2 != &big[6])
+					{
+						std::cout << "REALOCATED TEST3!";
+						std::cout << " | CAPACITY: " << big.capacity() << "\n";
+					}
+				}
+				test3 = &big[114430];
+			}
+
+			//count reallocations
+			std::cout << "COUNT: " << ++count << " | INCREASED BY: " << (double)((double)big.capacity() / (double)prev_capacity) << "\n";
+			prev_capacity = big.capacity();
+		}
+	}
+}
+```
 
 # Should I use your class instead of `std::vector`?
 
