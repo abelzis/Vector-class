@@ -147,6 +147,6 @@ int main()
 
 # Should I use your class instead of `std::vector`?
 
-**Answer**: No. You shouldn't use it as it's not as stable, probably not as efficient overall. And there are still many functions missing. Iterators are probably buggy either. Just stick with `std::vector` as it's standart.
+**Answer**: **No**. You shouldn't use it as it's not as stable, probably not as efficient overall. And there are still many functions missing. Iterators are probably buggy either. Just stick with `std::vector` as it's standart.
 
 Yes only if you want to improve it yourself and use with careful considerations.
