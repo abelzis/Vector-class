@@ -221,6 +221,20 @@ int main()
 }
 ```
 
+**Results**:
+
+`std::vector`:
+
+![std::vector1](https://i.gyazo.com/e101ce0a10864ac7f4b1b32951416527.png)
+![std::vector2](https://i.gyazo.com/be7adbefe951ffa1777f2f1051f0ecc7.png)
+
+`Vector`:
+
+![vector1](https://i.gyazo.com/345bfa77f1328ab104a317914f650479.png)
+![vector2](https://i.gyazo.com/a0365ddf9823be733661dd3696269fab.png)
+
+**Outcome**: there are technically no differences. Almost same formula for reallocation used - change capacity by 1.5* previous_size + 1.
+
 # Should I use your class instead of `std::vector`?
 
 **Answer**: **No**. You shouldn't use it as it's not as stable, probably not as efficient overall. And there are still many functions missing. Iterators are probably buggy either. Just stick with `std::vector` as it's the standart.
