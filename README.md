@@ -135,8 +135,18 @@ int main()
 }
 ```
 
-Results:
+**Results**:
 
 ![speed](https://i.gyazo.com/5c9cb4728cd2cd3c20ec496584a60e4f.png)
 
 ![memory](https://i.gyazo.com/1bd40ef0c0b7e25eaa473e13366ac378.png)
+
+![comparison](https://i.gyazo.com/ac5005f81096a30c2d86aae9bf516c14.png)
+
+**Outcome**: speed and memory use is pretty much identical.
+
+# Should I use your class instead of `std::vector`?
+
+**Answer**: No. You shouldn't use it as it's not as stable, probably not as efficient overall. And there are still many functions missing. Iterators are probably buggy either. Just stick with `std::vector` as it's standart.
+
+Yes only if you want to improve it yourself and use with careful considerations.
