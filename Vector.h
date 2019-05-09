@@ -42,7 +42,7 @@ public:
 		iterator& operator=(T* ptr) { ptr_ = ptr; return *this; }					//assigning another iterator
 		iterator& operator=(const iterator& it) { ptr_ = it.ptr_; return *this; }	//assigning another iterator
 		//assigning l-value
-		T& operator=(T&& value) 
+		T& operator=(T&& value)
 		{
 			if (ptr_ == nullptr)
 				ptr_ = new int;
@@ -67,7 +67,7 @@ public:
 		inline friend bool operator==(const iterator& a, const T& b) { return *a.ptr_ == b; }							//equal operator comparing to value
 		inline friend bool operator!=(const iterator& a, const iterator& b) { return !(a == b); }						//not equal operator comparing to iterator
 		inline friend bool operator!=(const iterator& a, const T& b) { return !(a == b); }								//not equal operator comparing to value
-		
+
 		//~iterator() { delete ptr_; }	//destructor
 	};	//END OF ITERATOR CLASS
 
@@ -78,7 +78,7 @@ public:
 	Vector(size_t size, T value) : size_(size), capacity_(size), elem_(new T[size]) { fill_n_(begin(), size, value); }
 	Vector(const Vector& obj);								//copy constructor
 	Vector(Vector<T>::iterator pos_start, T* pos_end);
-	
+
 	//get'er and set'er functions
 	inline size_t size() const { return size_; }			//returns size
 	inline size_t capacity() const { return capacity_; }	//returns capacity
@@ -110,8 +110,8 @@ public:
 	void erase(Vector<T>::iterator pos_start, Vector<T>::iterator pos_end);	//range erasion
 
 	bool empty() const;						//check if array is empty
-	inline void clear() { Vector<T>().swap(*this); }								//clears vector
-	void shrink_to_fit() { 	if (size_ < capacity_) reserve_(size_); }
+	inline void clear() { Vector<T>{}.swap(*this); }								//clears vector
+	void shrink_to_fit() { if (size_ < capacity_) reserve_(size_); }
 	inline T* begin() const { if (size_ > 0) return &elem_[0]; return nullptr; }	//begin iterator
 	inline T* end() const { if (size_ > 0) return &elem_[size_]; return nullptr; }	//end iterator
 
@@ -173,6 +173,7 @@ void Vector<T>::reserve_(const size_t capacity)
 	if (!this->empty())
 		this->copyValues_(begin(), end(), new_elem);	//copy elements to new array
 
+	delete[] elem_;
 	capacity_ = capacity;	//set capacity to new capacity
 	elem_ = new_elem;		//point old array pointer to new array address
 }
@@ -230,7 +231,7 @@ template<class T>
 void Vector<T>::push_back(const T value)
 {
 	if (size_ >= capacity_)	//if Vector is full, then increase capacity
-		this->reserve((size_t)(1.5*capacity_));
+		this->reserve((size_t)(1.5*capacity_ + 1));
 	elem_[size_] = value;
 	size_++;
 }
@@ -285,7 +286,7 @@ void Vector<T>::swap(Vector<T>& obj)
 	obj.elem_ = temp_elem_;
 	obj.size_ = temp_size_;
 	obj.capacity_ = temp_capacity_;
-	
+
 	//delete pointer
 	temp_elem_ = nullptr;
 }
@@ -370,7 +371,7 @@ void Vector<T>::erase(Vector<T>::iterator pos_start, Vector<T>::iterator pos_end
 			this->swap(pos_start, pos_end);
 			pos_start++;
 			pos_end++;
-		} 
+		}
 		//size_++;
 	}
 }
@@ -413,5 +414,7 @@ Vector<T>& Vector<T>::operator=(const Vector<T>& obj)
 template<class T>
 Vector<T>::~Vector()
 {
-	elem_ = nullptr;
+	size_ = 0;
+	capacity_ = 0;
+	delete[] elem_;
 }
