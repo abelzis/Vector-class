@@ -50,3 +50,93 @@ int main()
     6. clear
   ### Nested class
     1. ::iterator
+    
+    
+# Comparisons
+
+So is my class even comparable to `std::vector`? Let's find out!
+
+A simple test is being made: `push_back()` same amount of same values. Compare speed and size in memory. **Note**: `Release mode`, `/O2` optimization flag
+
+Code used:
+```cpp
+#include <iostream>
+#include <vector>
+#include "Vector.h"
+#include <fstream>
+#include <chrono>
+
+// Timer class for easier time calculations
+class Timer {
+private:
+	using hrClock = std::chrono::high_resolution_clock;
+	using durationDouble = std::chrono::duration<double>;
+	using tmPt = std::chrono::time_point<hrClock>;
+
+	//variables
+	tmPt start_;
+	durationDouble duration_{ 0 }, null_duration_{ 0 };
+
+	inline void addDuration_() { duration_ += hrClock::now() - start_; }
+public:
+	//default constructor
+	Timer() : start_{ hrClock::now() } {}
+
+	//functions
+	inline void reset() {
+		start_ = hrClock::now();
+		duration_ = null_duration_;
+	}
+	inline double elapsed() {
+		addDuration_();
+		return duration_.count();
+	}
+	inline void pause() {
+		addDuration_();
+	}
+	inline void resume() {
+		start_ = hrClock::now();
+	}
+};
+
+
+int main()
+{
+	unsigned int sz = 100000000;  // 100000, 1000000, 10000000, 100000000
+
+	std::ofstream results("results.txt");
+	
+	for (int j = 0; j < 100; j++)
+	{
+		// start v1 fill time
+		Timer t1;
+		std::vector<int> v1;
+		for (int i = 1; i <= sz; ++i)
+			v1.push_back(i);
+		t1.pause();
+		// end v1 fill time
+		std::cout << "std::vector<int> fill " << sz << ": " << t1.elapsed() << " s\n";
+		results << t1.elapsed() << "\n";
+	}
+	results << "\n\n\n\n\n\n\n";
+	
+	for (int j = 0; j < 100; j++)
+	{
+		// start v2 fill time
+		Timer t2;
+		Vector<int> v2;
+		for (int i = 1; i <= sz; ++i)
+			v2.push_back(i);
+		t2.pause();
+		// end v2 fill time
+		std::cout << "Vector<int>   \t fill " << sz << ": " << t2.elapsed() << " s\n";
+		results << t2.elapsed() << "\n";
+	}
+}
+```
+
+Results:
+
+![speed](https://i.gyazo.com/5c9cb4728cd2cd3c20ec496584a60e4f.png)
+
+![memory](https://i.gyazo.com/1bd40ef0c0b7e25eaa473e13366ac378.png)
