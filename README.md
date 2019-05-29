@@ -144,13 +144,13 @@ Integers in vectors:
 
 ![memory](https://i.gyazo.com/1bd40ef0c0b7e25eaa473e13366ac378.png)
 
-![comparison](https://i.gyazo.com/ac5005f81096a30c2d86aae9bf516c14.png)
+![comparison](https://i.gyazo.com/fa500d96754869598f744daaca039ca0.png)
 
 Students from [here](https://github.com/abelzis/Trecioji-Uzduotis) in vectors:
 
 ![speed](https://i.gyazo.com/f13d9d5793f9b328006eee558cb6aea1.png)
 
-![memory](https://i.gyazo.com/914ac79defb4f2543b26139e4d64d197.png)
+![memory](https://i.gyazo.com/c2ceeae7386708afc717265cbdd5c355.png)
 
 ![comparison](https://i.gyazo.com/10a35f520fa1396e206f3398c17df545.png)
 
