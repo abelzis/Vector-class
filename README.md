@@ -142,7 +142,7 @@ Integers in vectors:
 
 ![speed](https://i.gyazo.com/5c9cb4728cd2cd3c20ec496584a60e4f.png)
 
-![memory](https://i.gyazo.com/1bd40ef0c0b7e25eaa473e13366ac378.png)
+![memory](https://i.gyazo.com/5ded335c89f72fb9caab8a982d19dfdf.png)
 
 ![comparison](https://i.gyazo.com/fa500d96754869598f744daaca039ca0.png)
 
